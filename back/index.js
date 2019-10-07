@@ -4,13 +4,18 @@ const app = express()
 const port = 4000
 const puppeteer = require('puppeteer')
 const cors = require('cors')
-app.use(cors())
+const bodyParser = require('body-parser')
 
-let scrape = async () => {
+app.use(cors(), bodyParser.json())
+
+let scrape = async (body) => {
+  const { category, radius, userFreeform } = body
   const browser = await puppeteer.launch({headless: true});
   const page = await browser.newPage();
+  // const branch, radius, location 
+  console.log(`https://www.meetup.com/en-AU/find/events/${category}/?allMeetups=false&radius=${radius}&userFreeform=${userFreeform}`)
 
-  await page.goto('https://www.meetup.com/en-AU/find/events/tech/?allMeetups=false&radius=5&userFreeform=brisbane&mcId=c1000655&mcName=Brisbane%2C+AU');
+  await page.goto(`https://www.meetup.com/en-AU/find/events/${category}/?allMeetups=false&radius=${radius}&userFreeform=${userFreeform}`)
   await page.waitFor(1000);
 
   const result = await page.evaluate(() => {
@@ -38,8 +43,8 @@ let scrape = async () => {
 };
 
 
-app.get('/', async function(req,res) {
-  let result = await scrape()
+app.post('/', async function(req,res) {
+  let result = await scrape(req.body)
   res.send(result)
 })
 
