@@ -3,20 +3,10 @@ import './App.css';
 import * as axios from 'axios'
 
 function Form(props) {
-  const handleSubmit = (e) => {
-    e.preventDefault()
-    const elements = e.target.elements
-    const data = {}
-    for (let i = 0; i < elements.length; i++) {
-      data[elements[i].dataset.param] = elements[i].value.replace(' ', '+')
-    }
-    axios.post('http://localhost:4000/', data).then(response => props.setResultData(response.data))
-  }
-
   const [city, setCity] = useState('')
 
   return ( 
-    <form onSubmit={handleSubmit}>
+    <form onSubmit={props.handleSubmit}>
     <div>
       <label>Category</label>
       <select data-param='category'>
@@ -44,6 +34,7 @@ function Form(props) {
 
 function App() {
   const [resultData, setResultData] = useState()
+  const [isLoading, setIsLoading] = useState(false)
   const [activeData, setActiveData] = useState()
   const [included, setIncluded] = useState([])
 
@@ -52,9 +43,22 @@ function App() {
       setActiveData(resultData[0])}
   }, [resultData])
 
+  const handleSubmit = (e) => {
+    e.preventDefault()
+    setIsLoading(true)
+    const elements = e.target.elements
+    const data = {}
+    for (let i = 0; i < elements.length; i++) {
+      data[elements[i].dataset.param] = elements[i].value.replace(' ', '+')
+    }
+    axios.post('http://localhost:4000/', data).then(response => {
+      setResultData(response.data)
+      setIsLoading(false)
+    })
+  }
+
   const handleDiscard = () => {
     const newArray = resultData.slice(1)
-    setActiveData(newArray[0])
     setResultData(newArray)
   }
 
@@ -72,42 +76,46 @@ function App() {
 
   const renderResults = () => {
     const active = activeData || resultData[0]
-    return (
-      <div>
-        <h2>{active.groupName}'s<br />{active.eventName}</h2>
-        <h4>@{active.time} on {active.date}</h4>
-        <a href={active.eventLink} target='_blank' rel='noopener'>About...</a>
-        <button onClick={handleInclude}>Include</button>
-        <button onClick={handleDiscard}>Discard</button>
-      </div>
-
-      //save this for later
-      // <div onClick={() => {
-      //   const se = selected != undefined ? selected : new Array()
-      //   se.push(resultData[int])
-      //   setSelected(se)
-      //   setActiveData(int+1)
-      // }}>
-      //   <h2>{resultData[int].eventName}</h2>
-      // </div>
-    )
+    if (active) {
+      return (
+        <div>
+          <h2>{active.groupName}'s<br />{active.eventName}</h2>
+          <h4>@{active.time} on {active.date}</h4>
+          <a href={active.eventLink} target='_blank' rel='noopener'>About...</a>
+          <button onClick={handleInclude}>Include</button>
+          <button onClick={handleDiscard}>Discard</button>
+          {resultData.length > 97 && <button onClick={() => {
+            const newArray = resultData.slice(97)
+            setResultData(newArray)
+          }}>Skip</button>}
+        </div>
+      )
+    } else {
+      return (
+        <p>Thats all!</p>
+      )
+    }
   }
 
-  const renderSelected = (data) => {
+  const renderIncluded = () => {
     return (
       <ul>
-        {/* {data.map(element => <li>{element.eventName}</li>)} */}
+        {included.map(event => <li>{event.eventName}</li>)}
       </ul>
     )
   }
   
-  return (
-    <div className="App">
-      <Form setResultData={setResultData}/>
-      {resultData != undefined && renderResults()}
-      {/* {activeData != undefined && renderSelected(selected)} */}
-    </div>
-  );
+  if (!isLoading) {
+    return (
+      <div className="App">
+        <Form handleSubmit={handleSubmit}/>
+        {resultData != undefined && renderResults()}
+        {included != undefined && renderIncluded()}
+      </div>
+    );
+  } else {
+    return (<p>Loading...</p>)
+  }
 }
 
 export default App;
