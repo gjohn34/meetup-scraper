@@ -7,26 +7,32 @@ function Form(props) {
 
   return ( 
     <form onSubmit={props.handleSubmit}>
-    <div>
-      <label>Category</label>
-      <select data-param='category'>
-        <option value='tech'>Tech</option>
-        <option value='music'>Music</option>
-        <option value='arts'>Arts</option>
-      </select>
+    <div onClick={() => document.querySelector('#form').classList.toggle('hidden')}>
+      Options...
     </div>
-    <div>
-      <label>Distance from...</label>
-      <select data-param='radius'>
-        <option value='3'>5km</option>
-        <option value='6'>10km</option>
-        <option value='16'>25km</option>
-      </select>
+    <div id='form' className='hidden'>
+      <div>
+        <label>Category</label>
+        <select data-param='category'>
+          <option value='tech'>Tech</option>
+          <option value='music'>Music</option>
+          <option value='arts'>Arts</option>
+        </select>
+      </div>
+      <div>
+        <label>Distance from...</label>
+        <select data-param='radius'>
+          <option value='3'>5km</option>
+          <option value='6'>10km</option>
+          <option value='16'>25km</option>
+        </select>
+      </div>
+      <div>
+        <label>City</label>
+        <input data-param='userFreeform' onChange={(e) => setCity(e.target.value)} value={city}/>
+      </div>
     </div>
-    <div>
-      <label>City</label>
-      <input data-param='userFreeform' onChange={(e) => setCity(e.target.value)} value={city}/>
-    </div>
+    <button>Submit</button>
   </form>
   )
 }
@@ -54,7 +60,7 @@ function App() {
     axios.post('http://localhost:4000/', data).then(response => {
       setResultData(response.data)
       setIsLoading(false)
-    })
+    }).catch(error => alert('Something went wrong, please refresh the page and start again.'))
   }
 
   const handleDiscard = () => {
@@ -63,7 +69,7 @@ function App() {
   }
 
   const handleInclude = () => {
-    if (included == undefined) {
+    if (included === undefined) {
       setIncluded([activeData])
     } else {
       const newIncludedArray = included.slice()
@@ -81,7 +87,7 @@ function App() {
         <div>
           <h2>{active.groupName}'s<br />{active.eventName}</h2>
           <h4>@{active.time} on {active.date}</h4>
-          <a href={active.eventLink} target='_blank' rel='noopener'>About...</a>
+          <a href={active.eventLink} target='_blank' rel='noopener noreferrer'>About...</a>
           <button onClick={handleInclude}>Include</button>
           <button onClick={handleDiscard}>Discard</button>
           {resultData.length > 97 && <button onClick={() => {
@@ -109,8 +115,8 @@ function App() {
     return (
       <div className="App">
         <Form handleSubmit={handleSubmit}/>
-        {resultData != undefined && renderResults()}
-        {included != undefined && renderIncluded()}
+        {resultData !== undefined && renderResults()}
+        {included !== undefined && renderIncluded()}
       </div>
     );
   } else {
